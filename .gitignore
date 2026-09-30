@@ -1,0 +1,14 @@
+# 公開しないファイル（Gitの管理から外すもの）
+
+# 研修で自分の考えを書き込むシート（サイトの中身ではないため）
+design-sheet.md
+memo-template.md
+automation-sheet.md
+
+# パソコンが自動で作る不要なファイル
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Claude Code の個人用設定
+.claude/settings.local.json

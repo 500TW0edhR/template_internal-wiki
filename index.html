@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>社内ナレッジ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="home">
+  <header class="hero">
+    <h1>社内ナレッジ</h1>
+    <p class="lead">業務マニュアルを、キーワードですぐに探せます。</p>
+    <label class="search">
+      <span class="visually-hidden">マニュアルを検索</span>
+      <input id="q" type="search" placeholder="例：有給、経費、Wi-Fi" autocomplete="off" autofocus>
+    </label>
+    <p id="status" class="status" aria-live="polite"></p>
+  </header>
+
+  <section id="results" class="results" hidden></section>
+  <section id="categories" class="categories"></section>
+</main>
+
+<script src="search-index.js"></script>
+<script>
+(function () {
+  var docs = window.SEARCH_INDEX || [];
+  var order = window.CATEGORY_ORDER || [];
+  var planned = window.PLANNED_DOCS || [];
+  var input = document.getElementById("q");
+  var results = document.getElementById("results");
+  var categories = document.getElementById("categories");
+  var status = document.getElementById("status");
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function tagList(tags) {
+    return '<ul class="tags">' + tags.map(function (t) {
+      return '<li><a href="?q=' + encodeURIComponent(t) + '" data-tag="' + esc(t) + '">' + esc(t) + "</a></li>";
+    }).join("") + "</ul>";
+  }
+
+  // カテゴリ別の一覧（design.md の順。マニュアルがないカテゴリも見出しを出す）
+  // 見出しを押すと、そのカテゴリを折りたためる（最初はすべて開いた状態）
+  function renderCategories() {
+    var names = order.slice();
+    docs.forEach(function (d) { if (names.indexOf(d.category) < 0) names.push(d.category); });
+    categories.innerHTML = names.map(function (name) {
+      var items = docs.filter(function (d) { return d.category === name; });
+      var plans = planned.filter(function (p) { return p.category === name; });
+      var html = '<details class="category-block" open><summary><h2>' + esc(name) +
+        '</h2><span class="count">' + items.length + "件</span></summary>";
+      html += items.length
+        ? '<ul class="doc-list">' + items.map(function (d) {
+            return '<li><a href="' + esc(d.url) + '">' + esc(d.title) + '</a><span class="owner">' + esc(d.owner) + "</span></li>";
+          }).join("") + "</ul>"
+        : '<p class="none">まだマニュアルはありません</p>';
+      // 作成予定のマニュアル（本文はまだないので、リンクにしない）
+      if (plans.length) {
+        html += '<p class="planned-label">作成予定のマニュアル</p><ul class="planned-list">' +
+          plans.map(function (p) {
+            return '<li><span class="planned-title">' + esc(p.title) + '</span><span class="badge">未作成</span></li>';
+          }).join("") + "</ul>";
+      }
+      return html + "</details>";
+    }).join("");
+  }
+
+  // 空白で区切った言葉すべてを含むものを表示（タイトル・本文・タグが対象）
+  function search(q) {
+    var words = q.toLowerCase().split(/[\s　]+/).filter(Boolean);
+    if (!words.length) {
+      results.hidden = true;
+      categories.hidden = false;
+      status.textContent = "";
+      return;
+    }
+    var hits = docs.filter(function (d) {
+      var hay = (d.title + " " + d.text + " " + d.tags.join(" ")).toLowerCase();
+      return words.every(function (w) { return hay.indexOf(w) >= 0; });
+    });
+    categories.hidden = true;
+    results.hidden = false;
+    status.textContent = hits.length ? hits.length + " 件見つかりました" : "";
+    results.innerHTML = hits.length ? hits.map(function (d) {
+      return '<article class="result"><p class="result-category">' + esc(d.category) + "</p>" +
+        '<h2><a href="' + esc(d.url) + '">' + esc(d.title) + "</a></h2>" +
+        '<p class="snippet">' + esc(d.text) + "</p>" + tagList(d.tags) + "</article>";
+    }).join("") : '<p class="empty">「' + esc(q) + "」に当てはまるマニュアルは見つかりませんでした。<br>言葉を短くするか、別の言い方で試してください。</p>";
+  }
+
+  input.addEventListener("input", function () { search(input.value); });
+
+  // タグを押すと、そのタグで検索する
+  results.addEventListener("click", function (e) {
+    var t = e.target.getAttribute && e.target.getAttribute("data-tag");
+    if (t) { e.preventDefault(); input.value = t; search(t); window.scrollTo(0, 0); }
+  });
+
+  renderCategories();
+  var initial = new URLSearchParams(location.search).get("q");
+  if (initial) { input.value = initial; search(initial); }
+})();
+</script>
+</body>
+</html>
