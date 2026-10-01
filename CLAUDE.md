@@ -14,30 +14,38 @@
 
 ## 構成
 
+インターネットに公開されるのは `public/` フォルダの中身だけ。`public/` の外にあるもの（docs、design.md、CLAUDE.md、prompts、README.md、メモ類など）は公開されない。
+
 | ファイル | 役割 | 種類 |
 | --- | --- | --- |
-| `docs/*.md` | マニュアルの原本 | **原本（勝手に中身を変えない）** |
-| `design.md` | カテゴリとタグの設計 | 原本 |
-| `pages/*.html` | マニュアル1本につき1ページ。ファイル名は docs と同じで拡張子だけ `.html` | 生成物 |
-| `search-index.json` | 検索用データ（マニュアル1本につき1件） | 生成物 |
-| `search-index.js` | `search-index.json` と同じ内容を JavaScript にしたもの。`index.html` はこちらを読む | 生成物 |
-| `index.html` | トップ。検索窓とカテゴリ別の一覧 | 手で作ったもの |
-| `style.css` | 全ページ共通の見た目 | 手で作ったもの |
+| `docs/*.md` | マニュアルの原本（公開しない） | **原本（勝手に中身を変えない）** |
+| `design.md` | カテゴリとタグの設計（公開しない） | 原本 |
+| `public/pages/*.html` | マニュアル1本につき1ページ。ファイル名は docs と同じで拡張子だけ `.html` | 生成物 |
+| `public/search-index.json` | 検索用データ（マニュアル1本につき1件） | 生成物 |
+| `public/search-index.js` | `search-index.json` と同じ内容を JavaScript にしたもの。`index.html` はこちらを読む | 生成物 |
+| `public/index.html` | トップ。検索窓とカテゴリ別の一覧 | 手で作ったもの |
+| `public/style.css` | 全ページ共通の見た目 | 手で作ったもの |
 
 ## 守ること
 
+- サイトの表示に使うファイル（HTML・CSS・JavaScript・画像・robots.txt など）は、必ず `public/` の中に作る。`public/` の外に置いたものは公開されず、サイトから読み込めない
+- 逆に、原本・設計・メモ・作業ルールなど公開しないものは `public/` に入れない
+- `public/` の中のファイル同士のつながり（リンクや読み込み）は、`public/` の中だけで完結させる（`public/` の外を指さない）
+- 全ページに検索エンジンへ載せない設定（`<meta name="robots" content="noindex, nofollow">`）を入れる
 - HTML・CSS・JavaScript だけで作る。Node.js やビルドツールは使わない
-- `index.html` をダブルクリックで開けば動く状態を保つ（そのため検索データは `search-index.js` から読む）
+- `public/index.html` をダブルクリックで開けば動く状態を保つ（そのため検索データは `search-index.js` から読む）
 - 検索は外部サービスを使わず、ページ内の JavaScript で完結させる
 - 白背景、装飾は最小限。色はリンクや強調にだけ使う
 
 ## マニュアルを追加・更新したとき
 
-`docs/` を追加・更新したら、**必ず** 次の3つを作り直す。
+`docs/` を追加・更新したら、**必ず** `public/` の中の次の3つを作り直す。
 
-1. `pages/` の該当ページ（削除したマニュアルのページも消す）
-2. `search-index.json`
-3. `search-index.js`
+1. `public/pages/` の該当ページ（削除したマニュアルのページも消す）
+2. `public/search-index.json`
+3. `public/search-index.js`
+
+`search-index.json` の `url` は `public/` から見た場所（例：`pages/経費精算の手順.html`）で書く。
 
 作り直すときのルール：
 
@@ -70,7 +78,7 @@
 
 注意：
 
-- 公開しないファイルは `.gitignore` に書く。研修用の書き込みシート3つは除外済み
+- サイトとして公開されるのは `public/` の中だけ。GitHub には `public/` の外のファイルも保存されるので、GitHub にも送りたくないファイルは `.gitignore` に書く。研修用の書き込みシート3つは除外済み
 - 社外秘の情報は保存・送信しない
 - ログインを求められたら、何をどこに入力するかを持ち主に具体的に伝える
 - エラーが出たら、原因と対処を専門用語なしで説明する
