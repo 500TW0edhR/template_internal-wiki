@@ -23,6 +23,7 @@
 - docs/経費精算の手順.md
 - docs/有給休暇の申請方法.md
 - docs/慶弔休暇の申請方法.md
+- docs/社内Wi-Fiがつながらないときの対処.md
 - prompts/01_動作確認.md
 - prompts/02_サイト生成.md
 - prompts/03_公開準備.md
